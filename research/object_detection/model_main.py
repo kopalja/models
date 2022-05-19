@@ -106,6 +106,4 @@ def main(unused_argv):
 
 
 if __name__ == '__main__':
-  print("To nothing")
-  exit()
-  # tf.app.run()
+  tf.app.run()
