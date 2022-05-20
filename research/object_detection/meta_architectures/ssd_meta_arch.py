@@ -61,6 +61,14 @@ def front_rear_class(tensor: tf.Tensor,  weights: bool = False):
     return tf.concat([p1, p2, p3, p4], axis=-1)
 
 
+def basic_front_inv(basic: tf.Tensor, front_rear: tf.Tensor):
+    basic_ext = tf.repeat(basic, [1, 1, 1, 1, 3, 3], axis=-1)
+    arg_max = tf.argmax(front_rear, axis=-1) - 1
+    hot = tf.one_hot(arg_max, 3)
+    fron_rear_mask = tf.pad(tf.concat([hot, hot], axis=-1), [[0, 0], [0, 0], [4, 0]], constant_values=1)
+    return tf.multiply(basic_ext, fron_rear_mask)
+
+
 class SSDFeatureExtractor(object):
   """SSD Slim Feature Extractor definition."""
 
@@ -739,6 +747,8 @@ class SSDMetaArch(model.DetectionModel):
       box_encodings = tf.identity(box_encodings, 'raw_box_encodings')
       class_predictions_with_background = (
           prediction_dict['class_predictions_with_background'])
+      # TODO: Check
+      class_predictions_with_background = basic_front_inv(class_predictions_with_background)
       detection_boxes, detection_keypoints = self._batch_decode(
           box_encodings, prediction_dict['anchors'])
       detection_boxes = tf.identity(detection_boxes, 'raw_box_locations')
