@@ -899,7 +899,7 @@ class SSDMetaArch(model.DetectionModel):
           weights=batch_cls_weights,
           losses_mask=losses_mask)
       cls_2_losses = self._classification_loss(
-          prediction_dict['fron_rear_head'],
+          prediction_dict['front_rear_head'],
           front_rear_class(batch_cls_targets),
           weights=batch_cls_weights,
           losses_mask=losses_mask)
