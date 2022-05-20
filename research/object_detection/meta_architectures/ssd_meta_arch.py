@@ -40,18 +40,24 @@ except ImportError:
   pass
 # pylint: enable=g-import-not-at-top
 
-def basic_class(tensor):
+def basic_class(tensor: tf.Tensor, weights: bool = False):
+    op = tf.reduce_sum
+    if weights:
+        op = tf.reduce_mean
     p1 = tf.slice(tensor, [0, 0, 0], [-1, -1, 4])
-    p2 = tf.expand_dims(tf.reduce_sum(tf.slice(tensor, [0, 0, 3], [-1, -1, 3]), axis = -1), axis = -1)
-    p3 = tf.expand_dims(tf.reduce_sum(tf.slice(tensor, [0, 0, 6], [-1, -1, 3]), axis = -1), axis = -1)
+    p2 = tf.expand_dims(op(tf.slice(tensor, [0, 0, 3], [-1, -1, 3]), axis = -1), axis = -1)
+    p3 = tf.expand_dims(op(tf.slice(tensor, [0, 0, 6], [-1, -1, 3]), axis = -1), axis = -1)
     return tf.concat([p1, p2, p3], axis=-1)
 
 
-def front_rear_class(tensor):
-    p1 = tf.expand_dims(tf.reduce_sum(tf.slice(tensor, [0, 0, 0], [-1, -1, 4]), axis = -1), axis = -1)
-    p2 = tf.expand_dims(tf.reduce_sum(tf.gather(tensor, [4, 7], axis=-1), axis=-1), axis=-1)
-    p3 = tf.expand_dims(tf.reduce_sum(tf.gather(tensor, [5, 8], axis=-1), axis=-1), axis=-1)
-    p4 = tf.expand_dims(tf.reduce_sum(tf.gather(tensor, [6, 9], axis=-1), axis=-1), axis=-1)
+def front_rear_class(tensor: tf.Tensor,  weights: bool = False):
+    op = tf.reduce_sum
+    if weights:
+        op = tf.reduce_mean
+    p1 = tf.expand_dims(op(tf.slice(tensor, [0, 0, 0], [-1, -1, 4]), axis = -1), axis = -1)
+    p2 = tf.expand_dims(op(tf.gather(tensor, [4, 7], axis=-1), axis=-1), axis=-1)
+    p3 = tf.expand_dims(op(tf.gather(tensor, [5, 8], axis=-1), axis=-1), axis=-1)
+    p4 = tf.expand_dims(op(tf.gather(tensor, [6, 9], axis=-1), axis=-1), axis=-1)
     return tf.concat([p1, p2, p3, p4], axis=-1)
 
 
@@ -895,17 +901,16 @@ class SSDMetaArch(model.DetectionModel):
       # TODO: Create function to extract gt_classes and gt_front-reart
       cls_1_losses = self._classification_loss(
           prediction_dict['class_predictions_with_background'],
-          basic_class(batch_cls_targets),
-          weights=batch_cls_weights,
+          weights=basic_class(batch_cls_weights, weights=True),
           losses_mask=losses_mask)
       cls_2_losses = self._classification_loss(
           prediction_dict['front_rear_head'],
-          front_rear_class(batch_cls_targets),
-          weights=batch_cls_weights,
+          weights=front_rear_class(batch_cls_weights, weights=False),
           losses_mask=losses_mask)
-      cls_losses = cls_1_losses + cls_2_losses
+      classification_loss = tf.reduce_sum(cls_1_losses) + tf.reduce_sum(cls_2_losses)
 
       if self._expected_loss_weights_fn:
+        raise Exception("Loss weight function not supported")
         # Need to compute losses for assigned targets against the
         # unmatched_class_label as well as their assigned targets.
         # simplest thing (but wasteful) is just to calculate all losses
@@ -944,16 +949,16 @@ class SSDMetaArch(model.DetectionModel):
         classification_loss = tf.reduce_sum(cls_losses)
         localization_loss = tf.reduce_sum(location_losses)
       elif self._hard_example_miner:
+        raise Exception("Hard example miner not supported")
         cls_losses = ops.reduce_sum_trailing_dimensions(cls_losses, ndims=2)
         (localization_loss, classification_loss) = self._apply_hard_mining(
             location_losses, cls_losses, prediction_dict, match_list)
         if self._add_summaries:
           self._hard_example_miner.summarize()
       else:
-        print("This is what happens")
-        cls_losses = ops.reduce_sum_trailing_dimensions(cls_losses, ndims=2)
+        # cls_losses = ops.reduce_sum_trailing_dimensions(cls_losses, ndims=2)
         localization_loss = tf.reduce_sum(location_losses)
-        classification_loss = tf.reduce_sum(cls_losses)
+        # classification_loss = tf.reduce_sum(cls_losses)
 
       # Optionally normalize by number of positive matches
       normalizer = tf.constant(1.0, dtype=tf.float32)
