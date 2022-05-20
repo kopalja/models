@@ -745,10 +745,8 @@ class SSDMetaArch(model.DetectionModel):
       preprocessed_images = prediction_dict['preprocessed_inputs']
       box_encodings = prediction_dict['box_encodings']
       box_encodings = tf.identity(box_encodings, 'raw_box_encodings')
-      class_predictions_with_background = (
-          prediction_dict['class_predictions_with_background'])
       # TODO: Check
-      class_predictions_with_background = basic_front_inv(class_predictions_with_background)
+      class_predictions_with_background = basic_front_inv(prediction_dict['class_predictions_with_background'], prediction_dict['front_rear_head'])
       detection_boxes, detection_keypoints = self._batch_decode(
           box_encodings, prediction_dict['anchors'])
       detection_boxes = tf.identity(detection_boxes, 'raw_box_locations')
