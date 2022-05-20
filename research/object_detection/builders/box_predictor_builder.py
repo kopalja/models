@@ -110,7 +110,8 @@ def build_convolutional_box_predictor(is_training,
       kernel_size=kernel_size,
       apply_sigmoid_to_scores=apply_sigmoid_to_scores,
       class_prediction_bias_init=class_prediction_bias_init,
-      use_depthwise=use_depthwise)
+      use_depthwise=use_depthwise,
+      scope="FrontRearPredictor")
 
   # TODO: Create other heads
   other_heads = {
