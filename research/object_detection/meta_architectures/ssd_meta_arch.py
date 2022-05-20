@@ -901,10 +901,12 @@ class SSDMetaArch(model.DetectionModel):
       # TODO: Create function to extract gt_classes and gt_front-reart
       cls_1_losses = self._classification_loss(
           prediction_dict['class_predictions_with_background'],
+          basic_class(batch_cls_targets),
           weights=basic_class(batch_cls_weights, weights=True),
           losses_mask=losses_mask)
       cls_2_losses = self._classification_loss(
           prediction_dict['front_rear_head'],
+          front_rear_class(batch_cls_targets),
           weights=front_rear_class(batch_cls_weights, weights=False),
           losses_mask=losses_mask)
       classification_loss = tf.reduce_sum(cls_1_losses) + tf.reduce_sum(cls_2_losses)
