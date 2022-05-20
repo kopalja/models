@@ -94,14 +94,28 @@ def build_convolutional_box_predictor(is_training,
       box_encodings_clip_range=box_encodings_clip_range)
   class_prediction_head = class_head.ConvolutionalClassHead(
       is_training=is_training,
-      num_class_slots=num_classes + 1 if add_background_class else num_classes,
+      num_class_slots=6, # Background, plate, parking-sign, motorbike, car, truck
       use_dropout=use_dropout,
       dropout_keep_prob=dropout_keep_prob,
       kernel_size=kernel_size,
       apply_sigmoid_to_scores=apply_sigmoid_to_scores,
       class_prediction_bias_init=class_prediction_bias_init,
       use_depthwise=use_depthwise)
-  other_heads = {}
+
+  front_rear_head = class_head.ConvolutionalClassHead(
+      is_training=is_training,
+      num_class_slots=4, # FRONT, REAR, NA, OTHER(not plates and parking signs)
+      use_dropout=use_dropout,
+      dropout_keep_prob=dropout_keep_prob,
+      kernel_size=kernel_size,
+      apply_sigmoid_to_scores=apply_sigmoid_to_scores,
+      class_prediction_bias_init=class_prediction_bias_init,
+      use_depthwise=use_depthwise)
+
+  # TODO: Create other heads
+  other_heads = {
+    "front_rear_head": front_rear_head,
+  }
   return convolutional_box_predictor.ConvolutionalBoxPredictor(
       is_training=is_training,
       num_classes=num_classes,
