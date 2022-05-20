@@ -899,17 +899,19 @@ class SSDMetaArch(model.DetectionModel):
           losses_mask=losses_mask)
 
       # TODO: Create function to extract gt_classes and gt_front-reart
-      cls_1_losses = self._classification_loss(
+      classification_loss = self._classification_loss(
           prediction_dict['class_predictions_with_background'],
           basic_class(batch_cls_targets),
           weights=basic_class(batch_cls_weights, weights=True),
           losses_mask=losses_mask)
-      cls_2_losses = self._classification_loss(
+      front_rear_loss = self._classification_loss(
           prediction_dict['front_rear_head'],
           front_rear_class(batch_cls_targets),
           weights=front_rear_class(batch_cls_weights, weights=False),
           losses_mask=losses_mask)
-      classification_loss = tf.reduce_sum(cls_1_losses) + tf.reduce_sum(cls_2_losses)
+
+      classification_loss = tf.reduce_sum(classification_loss)
+      front_rear_loss = tf.reduce_sum(front_rear_loss)
 
       if self._expected_loss_weights_fn:
         raise Exception("Loss weight function not supported")
@@ -976,13 +978,19 @@ class SSDMetaArch(model.DetectionModel):
                                        localization_loss_normalizer),
                                       localization_loss,
                                       name='localization_loss')
+
       classification_loss = tf.multiply((self._classification_loss_weight /
                                          normalizer), classification_loss,
                                         name='classification_loss')
 
+      front_rear_loss = tf.multiply((self._classification_loss_weight /
+                                         normalizer), classification_loss,
+                                        name='front_rear_loss')
+
       loss_dict = {
           'Loss/localization_loss': localization_loss,
-          'Loss/classification_loss': classification_loss
+          'Loss/classification_loss': classification_loss,
+          'Loss/front_rear_loss': front_rear_loss,
       }
 
 
