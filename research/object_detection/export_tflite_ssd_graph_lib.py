@@ -37,6 +37,14 @@ if tf_version.is_tf1():
   from tensorflow.tools.graph_transforms import TransformGraph  # pylint: disable=g-import-not-at-top
 
 
+def basic_front_inv(basic: tf.Tensor, front_rear: tf.Tensor):
+    basic_ext = tf.repeat(basic, [1, 1, 1, 1, 3, 3], axis=-1)
+    arg_max = tf.argmax(front_rear, axis=-1) - 1
+    hot = tf.one_hot(arg_max, 3)
+    fron_rear_mask = tf.pad(tf.concat([hot, hot], axis=-1), [[0, 0], [0, 0], [4, 0]], constant_values=1)
+    return tf.multiply(basic_ext, fron_rear_mask)
+
+
 def get_const_center_size_encoded_anchors(anchors):
   """Exports center-size encoded anchors as a constant tensor.
 
@@ -246,8 +254,9 @@ def export_tflite_graph(pipeline_config,
   # The score conversion occurs before the post-processing custom op
   _, score_conversion_fn = post_processing_builder.build(
       pipeline_config.model.ssd.post_processing)
-  class_predictions = score_conversion_fn(
-      predicted_tensors['class_predictions_with_background'])
+  # class_predictions = score_conversion_fn(
+  #     predicted_tensors['class_predictions_with_background'])
+  class_predictions = score_conversion_fn(basic_front_inv(predicted_tensors['class_predictions_with_background'], predicted_tensors['front_rear_head']))
 
   with tf.name_scope('raw_outputs'):
     # 'raw_outputs/box_encodings': a float32 tensor of shape [1, num_anchors, 4]

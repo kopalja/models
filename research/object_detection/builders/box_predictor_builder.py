@@ -104,7 +104,7 @@ def build_convolutional_box_predictor(is_training,
 
   front_rear_head = class_head.ConvolutionalClassHead(
       is_training=is_training,
-      num_class_slots=4, # FRONT, REAR, NA, OTHER(not plates and parking signs)
+      num_class_slots=4, # FRONT, REAR, NA, OTHER(plates, parking signs, background)
       use_dropout=use_dropout,
       dropout_keep_prob=dropout_keep_prob,
       kernel_size=kernel_size,
