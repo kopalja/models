@@ -741,12 +741,15 @@ class SSDMetaArch(model.DetectionModel):
       raise ValueError('prediction_dict does not contain expected entries.')
     if 'anchors' not in prediction_dict:
       prediction_dict['anchors'] = self.anchors.get()
+
+    prediction_dict["final_class_predictions_with_background"] = tf.identity(basic_front_inv(prediction_dict['class_predictions_with_background'], prediction_dict['front_rear_head']), "final_class_predictions_with_background")
+
     with tf.name_scope('Postprocessor'):
       preprocessed_images = prediction_dict['preprocessed_inputs']
       box_encodings = prediction_dict['box_encodings']
       box_encodings = tf.identity(box_encodings, 'raw_box_encodings')
-      # TODO: Check
-      class_predictions_with_background = basic_front_inv(prediction_dict['class_predictions_with_background'], prediction_dict['front_rear_head'])
+      # class_predictions_with_background = basic_front_inv(prediction_dict['class_predictions_with_background'], prediction_dict['front_rear_head'])
+      class_predictions_with_background = prediction_dict["final_class_predictions_with_background"]
       detection_boxes, detection_keypoints = self._batch_decode(
           box_encodings, prediction_dict['anchors'])
       detection_boxes = tf.identity(detection_boxes, 'raw_box_locations')

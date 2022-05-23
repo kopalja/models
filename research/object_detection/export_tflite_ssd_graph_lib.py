@@ -256,7 +256,8 @@ def export_tflite_graph(pipeline_config,
       pipeline_config.model.ssd.post_processing)
   # class_predictions = score_conversion_fn(
   #     predicted_tensors['class_predictions_with_background'])
-  class_predictions = score_conversion_fn(basic_front_inv(predicted_tensors['class_predictions_with_background'], predicted_tensors['front_rear_head']))
+  #  class_predictions = score_conversion_fn(basic_front_inv(predicted_tensors['class_predictions_with_background'], predicted_tensors['front_rear_head']))
+  class_predictions = score_conversion_fn(predicted_tensors['final_class_predictions_with_background'])
 
   with tf.name_scope('raw_outputs'):
     # 'raw_outputs/box_encodings': a float32 tensor of shape [1, num_anchors, 4]
