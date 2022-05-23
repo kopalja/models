@@ -646,6 +646,8 @@ class SSDMetaArch(model.DetectionModel):
           predictions_dict['box_encodings'], boxlist_list))
     self._batched_prediction_tensor_names = [x for x in predictions_dict
                                              if x != 'anchors']
+    # kopi_mark
+    predictions_dict["final_class_predictions_with_background"] = tf.identity(basic_front_inv(predictions_dict['class_predictions_with_background'], predictions_dict['front_rear_head']), "final_class_predictions_with_background")
     return predictions_dict
 
   def _raw_detections_and_feature_map_inds(self, box_encodings, boxlist_list):
@@ -742,7 +744,7 @@ class SSDMetaArch(model.DetectionModel):
     if 'anchors' not in prediction_dict:
       prediction_dict['anchors'] = self.anchors.get()
 
-    prediction_dict["final_class_predictions_with_background"] = tf.identity(basic_front_inv(prediction_dict['class_predictions_with_background'], prediction_dict['front_rear_head']), "final_class_predictions_with_background")
+    # prediction_dict["final_class_predictions_with_background"] = tf.identity(basic_front_inv(prediction_dict['class_predictions_with_background'], prediction_dict['front_rear_head']), "final_class_predictions_with_background")
 
     with tf.name_scope('Postprocessor'):
       preprocessed_images = prediction_dict['preprocessed_inputs']
